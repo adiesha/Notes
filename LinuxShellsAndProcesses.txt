@@ -1,0 +1,171 @@
+
+
+printenv - print environment variables in a terminal
+printenv
+
+VAR=TEST
+printenv | grep VAR => will not print VAR
+
+you need to export a variable to keep it as a environment variable
+export VAR
+
+to unset env variable 
+export -n VAR
+
+to unset shell variables you have to use unset command
+unset VAR
+
+bash kepp configuartions in multiple startup files 
+
+when we login to unix by typing in a password linux first executes /etc/profile which in turn executes scripts in /etc/profile.d
+
+then bash executes .bash_profile in users home directorywhich holds environment and shell variables specific to the user
+
+then .bash_profile executes ~/.bashrc which holds alises and bash functions 
+
+In centOS local .bashrc file also executes systemwide /etc/bashrc file which holds system wide aliases and functions 
+
+~/.bashrc file holds aliases and functions specific to the user 
+
+Once all this done user logs in
+
+If user is already logged in and executes a shell script it's executed in a shell but not a login shell also if a user is logged into the GUI and starts a shell it's not a login shell. Generally speaking login shell is required to input a username and login key.
+Non login shells only the users .bashrc file gets run
+
+In centOS local .bashrc file executes the global /etc/bashrc file which holds systemwide aliases and functions then it releases control back to local .bashrc file.
+
+
+Summary 
+
+/etc/profile and /etc/profile.d/*.sh are usefule systemwide environment and shell variables important for interactive logins. 
+	If you want to set an environment variable for all users set it in /etc/profile or /etc/profile.d/*.sh scripts
+If you want to set a variable specific to user change it in users .bash_profile file 
+if you want to add aliases and functions for all users add it in /etc/bashrc file 
+if you want to add aliases and functions for specific users add it in ~/.bashrc file 
+
+Note: when you add aliases and functions to users .bashrc file be sure to add them to end after /etc/bashrc file is called to override systemwide aliases and functions
+
+
+
+Tricks 
+
+!ls - run the lat command that starts with ls
+
+
+ls /var/www
+
+then cd !* run the current command with previous command's parameters
+
+sudo !! - run the whole previous command as a parameter to current command
+
+
+
+extended globs give more pattern matching power 
+
+use shopt to see if it is enabled 
+
+if not 
+shopt -s extglob
+
+
+preserve variable name in substitution 
+fname=report
+touch /home/${fname}_january
+
+command substitution
+
+echo "my name is $(whoami)"
+
+or
+echo "my name is `whoami`"
+
+
+Pipe  |
+take outpu of one command and input it to another command
+
+The type of pipes that we are using are considered unnamed pipes
+
+unnamed pipe is a direct connectin between two commands running in the same terminal
+
+If we want send an output of command in one terminal to a another command in a different terminal we can use a named pipe or FIFO. This is a pipe exist in the file system. Pipe acts like a file in the disc that one process can write to while other process can read from. A named pipe is still a direct connection between programs. It just uses file system as an interface.
+When one process is writing to the named pipe its output gets block until the receiving process start reading it 
+
+
+ex:
+In one terminal->
+mkfifo named_pipe
+echo "Hi" > named_pipe
+
+In second teminal
+cat named_pipe
+
+First teminal
+ls -l 
+
+you can see the difference in listing it includes letter p
+
+
+Process
+PID:
+Memory:
+
+ps command
+
+
+find pid of known process
+pidof firefox
+
+
+killing all processes for user 
+sudo killall -u adieshal
+
+
+kill -l   list all the signals
+
+
+nice level
+
+higer the nice level low cpu priority
+lower the nice level higher the cpu priority
+watch ps executes watch command every to seconds
+
+
+at job
+
+runs at a specific time
+batch job runs when cpu load drop below 0.8
+
+cron job - reccurring jobs 
+	user cron jobs 
+		stored in /var/spool/cron
+	system cron jobs
+		stored in /etc/cron.d
+
+
+crontab
+man crontab
+man 5 crontab
+
+
+
+System services 
+daemon = system services
+
+when linux boots kernal starts one service. It loads all other processes
+most legacy linux systems use init
+
+unix has concept of run level or configurations 
+each run level determines what services should be started.
+You can switch between run level while the system is running
+
+Newest replacement to init is systemd
+
+systemd manages system services in centOS. It lso manages devices system timers and targets
+
+systemd objects called units and for each unit there is unit file per configuration 
+
+we'll see about service units and service unit files 
+
+command that we use to manage these units - systemctl
+
+systemctl list-unit-files -at service  

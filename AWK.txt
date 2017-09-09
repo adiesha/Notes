@@ -1,0 +1,93 @@
+Basic syntax
+awk 'awk-program' file
+awk program contains statements each of which consists of a pattern or and an action. You can ommit the pattern or action but not both
+The action part of the awk is enclosed in curly braces.
+action is applied to every line of the input unless stated otherwise.
+
+awk -f awkProgramfile input > outputfile
+
+awk -F fieldseperator (ex: awk -F , '{print $2}' input.txt)
+
+FS = field seperator flag 
+RS = record seperator flag
+OFS = output field seperator flag
+ORS = output record seperator flag
+NF = number of fields in the line
+NR = record number
+ 
+These values can be used in patterns as well as in records
+
+we can give multiple input files to awk by simply adding file names to the end of the command
+ex:
+awk -f awkProgramfile input1.txt input2.txt input3.txt input4.txt > outputfile
+
+FILENAME = current file name
+FNR = record number in the file 
+$0 - whole line 
+$n - value of nth field in the line
+
+'{print $(NF-1)}' = prints the one before last field of each line 
+
+we can assign new values to the fields
+
+awk '{$2="TWO"; print}'
+
+changing the value $0 will change NF 
+
+awk will treat variables strings or numbers depending on the context. If program has a mathematical operator on variables then it will try to treat those variables as numbers 
+
+awk '{$2="TWO";a=1;b=4; print a+b}' nameemailavg.csv
+
+awk '{$2="TWO";a=1;b=4; print a+b}' nameemailavg.csv
+
+if we want to treat a variable as a number we can add 0 to it
+awk '{print "one" + 0}'
+if we want to treat a variable as a string we can concatinate "" to it
+awk '{print 1 ""}'
+
+
+regular expressions in awk are written between slashes
+
+/Regular expression/
+
+/abc/ => abc xxxxxabcssss  
+
+. metacharacter
+matches any single character
+/a.c/ => abc afc  not ac
+
+
+\ metacharacter removes the special meaning of following metacharacter
+
+
+
+/a[a-z]b/  (character class)
+
+/a[^a-z]/ matches anything that is nt in the character class
+
+* matches 0 or more occurrences of previous item (can be a literal character, a period or a character class)
+
++ matches 1 or more occurrences of previous item
+
+/ab+c/   => abbbc but not ac
+
+? matches exactly 0 or 1 repeats of the previous item
+
+/ab?c/  => abc  ac 
+
+{} can specify a exact number of repeats
+
+/ab{3}c/ => abbbc
+
+/ab{3,}c/ => abbbc abbbbbc abbbbbbc  but not abc  (matches 3 or more occurrences)
+
+
+quantifiers are greedy??
+means that quantified item in a regular expression will match as many characters as it possibly can even if the following item will also match some of these characters
+
+
+ex:
+/<.+>/ matches all of "<i>itaic text</i>
+
+
+

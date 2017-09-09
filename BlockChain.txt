@@ -1,0 +1,40 @@
+Block chain is a new type of database.
+
+blockchain database is installed on indivisual computers used by the people who use the database, In fact copy of the same database is installed on every computer of every user who uses that databse.
+
+No central database
+database is instaled on all the computers that use the databse
+Any transaction in that databse must be validated by all the participating memebers
+It has the power to be almost hack proof
+Eliminates central authorities
+
+
+origin
+Bigins with Bitcoin
+
+Bitcoin - A new form of peer to peer electronic cash (A open source software)
+
+Bitcoin is a crypto currency
+because the existence in istory of transaction can be seen by anyone but the content are only known to the poeple making and receiving each individual transaction
+what cannot be seen by others is called encrypted and what can be seen is unencrypted
+
+As a currency it does not exist in a physical form
+when transaction take place participants who use Bitcoin their computers specifically validate the transaction and it is recorded in a distributed ledger
+Ledger's name : blockchain
+
+How can posiibl digital currency have a value ?
+typically something must be relatively scarce and must be accepted by others as a payment
+
+1.	There are only limited amount of bitcoins available. The original createor stipulated that there would only be 21 million bitcoins. Not known why this volume was chosen
+2.	When acquiring new bitcoin it requires unique type of mining. New bitcoins are provided as rewards to blockchain participants that solves increasingly complex math puzzels every time blockchain transaction takes place. People who chose to solve these math problems are called miners.
+They require considerable computing power
+
+
+Cost of mining bitcoins is high we need lot of processors and electrical power. When puzzel is solved minors are rewarded with bitcoins. He can now trade that bitcoin openly on the global bitcoin exchange
+
+
+A transaction that is initiated from the wallet is added to a queue validated by all the other bitcoin users and if approved added as a block to the distributed ledger, the blockchain
+
+Note: Adding a block requires the activity of miners. This creates a form of validation to the transactions, That is requiring miners in the transaction means we almost eliminates fraudulent activity.
+
+hacker would need to fake all the processing and electrical power of the miners to fraudulently add a block to the blockchain. Having miners solve math problems to vaidate adding blocks called proof of work

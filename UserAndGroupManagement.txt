@@ -1,0 +1,188 @@
+Linux is a multi user system
+
+Administrator can add multiple users to a group and then give that group specific access to resources
+
+every user has a name and numeric user id
+
+every group has a name and numeric group id
+
+every user belongs to only one primary group
+
+In RedHat every user has their own primary group with their name
+
+In debian Linux all users belongs to one primary group named users
+
+Files created by a user belongs to the user and user's primary group
+
+users can not belng to more than one primary group
+
+each user can belong to additional supplementary groups but groups can not contain other groups
+
+cat /etc/passwd contains user account details
+
+root:x:0:0:root:/root:/bin/bash
+$1 - username
+$2 - whether password is hashed (If hashed "x" and password is stored in /etc/shadow file)
+	salt and hashed password OR a status exception value e.g.:
+	"$id$salt$hashed", the printable form of a password hash as produced by crypt (C), where "$id" is the algorithm used. (On GNU/Linux, "$1$" stands for MD5, "$2a$" is Blowfish, "$2y$" is Blowfish (correct handling of 8-bit chars), "$5$" is SHA-256 and "$6$" is SHA-512,[4] other Unix may have different values, like NetBSD. Key stretching is used to increase password cracking difficulty, using by default 1000 rounds of modified MD5,[5] 64 rounds of Blowfish, 5000 rounds of SHA-256 or SHA-512.[6] The number of rounds may be varied for Blowfish, or for SHA-256 and SHA-512 by using e.g. "$6$rounds=50000$".
+	Empty string – No password, the account has no password. (Reported by passwd on Solaris with "NP").[7]
+	"!" – the account is password locked, user will be unable to log-in via password authentication but other methods (e.g. ssh key) may be still allowed.[8]
+	"*LK*" or "*" – the account is locked, user will be unable to log-in via password authentication but other methods (e.g. ssh key) may be still allowed.[8]
+	"!!" – the password has never been set (RedHat)[9]
+$3 - Numeric User ID (non admin user accounts start at 1000 [this is just a configration setting in /etc/login.defs])
+$4 - Numeric Id of users primary group (To look up Numeric grouupId open /etc/group)
+$5 - Comment field - we can store information about the user in this field
+$6 - Users home directory (By defualt home directories resides in /home/username directory this also can be configured in /etc/default/useradd or by using useradd command with -D option)
+$7 - default login shell (Default in centOS is /bin/bash we can change this by editing /etc/default/useradd or useradd command with -D option)
+
+
+Shadow file contains password information for user accounts as well as account aging informations
+
+/etc/shadow file
+$1 - username
+$2 - hashed password or characters to indiacate password hasn't been set. In RedHat based system there will be one or more exclamation points if password is not set
+or if the account is locked [$n$ - n indicates the hash type 
+$3 - Number of days between 1 st of Jan 1970 to day of paswword last modified
+$4 - Number of days before password can be changed (0 means can be changed in any tiime) 
+$5 - Number of days before password must be changed 
+$6 - Number of days to warn berfore password expires
+$7 - Number of days after password is expired that account is desabled
+$8 - Number of days between 1 st of Jan 1970 and the date that account was desabled
+$9 - For future use
+
+
+
+
+Group info stroed in 
+/etc/group
+$1 - group name
+$2 - placeholder for encoded group password because we are using shadowsuite (password stored in /etc/gshadow)
+$3 - Numeric grouupId (Non admin groups start at 1000 any groupID under 1000 belongs to the root user or the system services)
+$4 - users that belongs to that group
+
+Note that when user changes groups with newgrp command they are changing their efective rimary group . If user creates a file after changing groups it will be owned by the user and their new primary group
+
+you can use pwscore to check the strength of the 
+
+
+cat /etc/default/useradd defines a skelaton directory. It contains files that are copied to each users home directory automatically
+
+how to create a user?
+
+sudo useradd bob
+
+verify that by viewing /et/passwd file
+
+
+In redhat based distributions primary group is automatically created 
+
+
+when viewing /et/shadow file we can see !! against the user bob this is because we haven't set a password
+
+To set a password
+sudo passwd bob
+
+when creating a user, In their home directory some hidden files are automatically created
+
+to delete user
+sudo userdel bob
+to delete user with home directory
+sudo userdel -r bob
+
+to modify users use usermod
+
+usermod -L bob - locks the password
+-L only locks the password. user can still login using ssh keys if user has any 
+
+to stop that make users shell /sbin/nologin
+
+usermod -s /sbin/nologin bob
+
+
+passwd command
+
+-d delete password
+-e expires password
+-l locks the passwd
+-u unlocks the passwd
+-S outputs the passwd status
+
+
+passwd - l bob
+locks the password you can see preceding !! to the hash value in shadow file
+
+but to fully lock the user 
+
+sudo chage -E 0 bob - expires bob account
+to verify sudo chage -l bob
+
+to reverse this sudo chage -E -1 bob
+
+
+chage - change age command 
+
+
+switch to different user temporarily
+
+whoami - tells who currently we are 
+logname - tells who we logged initially 
+
+
+there is a different in switching to root and login in as the root. It is the ENVIRONMENT
+
+It is the variables and system configurations that comes with the logged in user
+
+when we switch to root as 
+su root 
+we inherit root variables and previously logged in user variables too
+we can see that by 
+echo $PATH (You can see when we switched to root we kept bob's environment)
+
+now type exit 
+now type 
+su - root
+echo $PATH
+
+we can see our path is different
+This time we only inherited root user environment 
+
+
+
+
+Priivilege comparision
+
+Sudo										Su
+Enter user's password						Enter root's passwd
+Elevates privileges for only one command	Elevates privileges for whole sesssion
+All command execution is logged				No accountability, All users who switch are root
+Granular permission system					All-powerfull for anyone who has the password
+Only allows certain people certain privileges
+
+sudo allows to elevate privileges for one command
+sudo has a configuration file that allows Administrator to set up who gets to elevate Priivileges and what they get to do. It's granular enough that we can evn configue which command options user can run
+
+tool to edit this configration file is visudo which logs the sudo as file and edits using vi 
+sudo vistudio 
+
+
+create group
+sudo groupadd testgroup
+sudo gpasswd testgroup
+
+to switch our primary group 
+newgrp testgroup
+type id to see the change 
+
+to change our primary group back type newgrp again
+
+
+if we want to be able to switch to a group without typing password we should add hat user to the group
+sudo gpasswd -a bob testgroup
+
+now when we type 
+newgrp testgroup
+we don't have to enter password
+
+
+To add Administrator to a group who can change password and manage other memebers of the group
+sudo gpasswd -A bob testgroup

@@ -1,0 +1,5 @@
+statement
+
+statement is made out of clauses (basic componenets of the statement)
+clauses are constructed out of keywords which tell the database to take some action
+predicates  let us specify what information we are working with

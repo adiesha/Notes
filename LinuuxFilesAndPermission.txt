@@ -1,0 +1,58 @@
+users can belong to ultiple groups 
+groups can not contain other groups
+files and directories belong to one owner
+files and directories belong to one group owner
+permission can be set for user, group or other
+in order to change the ownership of the file you need to either root or elevate privileges with sudo 
+
+
+chmod
+
+
+chmod ugo-x file
+chmod u-x file
+chmod u=x,g=rx,o=rw file
+
+for directories maximum initial permission is 777 since execute in a directory does not pose a security risk
+maximum initial permission for file is 666
+
+when we need to find out default permission to these wwe can substract this value by umask
+
+ex:
+usask - 0002
+
+default dir permission = 777 - 002 = 775
+default file permission = 666 - 002 = 664
+
+umask - 0022
+
+default dir permission = 777 - 022 = 755
+default file permission = 666 - 022 = 644
+
+SUID and SGID are special bits for privilege escalation on executable file. SUID bit allows non user owners execute commands wth the privilege of the user owner
+
+rwsr-xw-x 1 root root /usr/bin/su	
+
+if s => execute is already set
+if S => execute permissions are not set
+
+setting SUID bit
+chmod 4755 /usr/bin/su
+chmod u+s /usr/bin/su
+
+SGID is simillar to SUID 
+when SGID is set, s resides in execute position of the group owner's permissions. when regular user executes a command with a SGID bit set it runs with the privileges of the group owner of the file
+
+chmod 2755 /usr/bin/screen
+chmod g+s /usr/bin/screen
+
+these files allow executing commands without prompting password
+
+to find files with SUID and SGID files use 
+sudo find / -perm -4000
+
+SGID and sticky are special bits for directories
+
+sticky bit 
+
+chmod 1777 stickyDir

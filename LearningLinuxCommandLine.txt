@@ -1,0 +1,18 @@
+pipe | 
+you can take the output of a command and redirect it to another command
+
+piping takes result of a one command and sends into another command
+
+
+awk
+
+syntax 
+awk '{print $2}' file.txt
+
+between '' lines you can write your awk program
+
+sed
+syntax
+
+sed s/apple/guava/ file.txt
+Above program is a simple program to read file.txt and find and replace word apple with guava

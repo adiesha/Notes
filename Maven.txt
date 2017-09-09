@@ -1,0 +1,12 @@
+
+
+Maven plugin
+A Maven plugin is a collection of one or more goals.
+A goal is a unit of work in Maven
+
+To execute a single Maven plugin goal use the command mvn pluginname:goal
+
+maven core plugins
+
+
+mvn help:effective-pom

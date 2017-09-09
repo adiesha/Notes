@@ -1,0 +1,87 @@
+
+
+To got the matching parenthisis type % 
+
+h,l characters     j,k lines
+w,b,e Words			^,$  begin end of line
+(,) Sentences		{,} pragraphs
+
+deleting text
+
+x delete character		dd delete current line
+dw delete current Word 	de delete to end of word
+d^ delete to start of line	d$ delete to end of line (also D)
+
+
+r replace current character and still in command mode
+s replace curretn character and in insert mode
+cc changes current line and ends up in insert mode
+cw or ce changes current word and ends in insert mode
+c^ To beggining of the line
+c$ to the end of the line
+
+R enters to overide mode
+~ changes the case of the character
+J joins the next line to current line 
+
+u - undo 
+
+Ctr + r redo
+
+U undo the all the changes made to current line
+
+
+yy copy line 
+
+p put after cursor
+P put before cursor
+
+
+2dd delete two line
+
+
+/word searches the word forward
+n - next one towards the same direction
+N - next one towards the opposite direction
+
+?word searches the word backwords
+
+
+Search works  with regular expressions
+ex:
+/a.c finds abc afc agc ..
+/a\.c finds a.c
+^ means start of the file $ means end of the file
+
+[] - character set matches a single character in the set
+/a[xyz]c matches axc azc ayc 
+
+
+search and replace
+:s/old/new/ replaces first old with new in current line
+:s/old/new/g replaces every old with new on current line 
+:%s/old/new/ replaces first old with new on every line 
+:%s/old/new/g replaces every old with new on every line
+
+:%s/the[yrm]/(&)/g replaces every them they and ther with samething in the parenthesis
+
+:%s/\(they\) \(were\)/\2 \1/ replaces they were with were they (this is about grouping)
+
+
+>> indents current line
+	3>> indents 3 lines
+	>} indents whole paragraph
+
+<< outdents current line
+
+
+:se ai auto indent on 
+:se noi auto indent off
+
+:se wm=8 wrap margin on
+:se wm=0 wrap margin off
+
+
+!}fmt format the paragraph
+
+we can use unix commnds like awk sed fmt to format and manipulate text using vi

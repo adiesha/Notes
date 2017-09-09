@@ -1,0 +1,5 @@
+
+
+
+good idea about VirtualBox, snapshots and installations 
+
