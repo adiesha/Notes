@@ -1,1 +1,328 @@
 Bootloader - GRUB loads the kernel
+
+kernel has command line parameters GRUB is responsible for passing the parameters
+
+linx kenel is an api
+it provides a programming interface
+functions that we can call from userspace into the kernel (System calls)
+
+provides a virtul file system
+	entries
+		proc
+		sys
+		debugfs
+
+file system has device files (System calls)
+we interact with device drivers by doing operations on those files.
+Those are standard system calls like read write open
+
+
+---Kernal is a gatekeeper
+***enforces privileges (capabilities)
+
+in linux kernel source code it refers to checking the capabilities of a process to see it allowed to perform some sort of privilege operation. 
+
+Root processes have all the privileges
+
+***Executes supervisor instructions 
+	that only are allowed to be executed when the cpu itself in the supervisory mode. It's in that mode when we are executing inside the kernel
+
+
+***Implements security policies
+	the underlying policies used by SELinux for example 
+
+***Control access to hardware and other resources
+
+
+---Kernel is Modular
+
+***kernel image itself, that vmlinuz file is relatively small
+	
+***it is sufficient to boot user space, to begin running some processes
+
+***optional functionaluty is added after booting
+
+***additional functionalities are loaded by kernel module mechanism, loadable module mechanism means we can just load the drivers we need. 
+
+/boot directory contains the kernel image
+
+
+
+		Applications -> Library (Std c lib) -> Kernel <- (Disk , Keyboard, Mouse)
+
+commands for hardware info includes 
+lshw - list hardware
+lspci - info pci devices 
+lsusb - onfo usb devices
+lsbk - info block devices
+lscpu - info about cpu
+lsdev - info other devices
+
+
+Also commands for controlling and configuring hardware
+hdparm - hard disks
+proc dev sys file systems also provides a mechanism to write information through the kernel to the deveices
+inb, outb
+setpci - change registers and resources for pci devices 
+
+
+Applications do not call the system calls directly usually. what it does is it calls library function and that calls the system call
+
+standard library uses architecture dependent means to invoke the system call
+Suitably size parameters are ususally put in registers
+The kernel is invoked, determines which system call, and calls it
+when the system call returns, it's gonna return back to the library
+if error occurs sys call returns a negative value to the library absolute value indicates the what error is
+if not error it returns zero or positive number
+if sys call returns a negative value to the library, then the library sets what's effectively a global variable in your process called errno to represent what error was,
+and the library returns -1 to the Application
+
+for more info ---> man 2 read
+
+
+printk - commmonly called function in linux kernel
+printk() - print messages
+
+the out put of printk is put in a RAM buffer
+and normally printed on the system console
+logging daemon may send to file or somewhere else (ex: /var/log/messages)
+dmesg shows RAM buffer messages from Kernel
+
+tail -f /var/log/messages
+
+
+dmesg | head
+
+
+Surveying the linux kernel
+/proc /sys and device files 
+
+these virtual file systems don't store content on the disk more accurately they generate their contents when you ask for it
+each file and directory entry has an associated function in the kernel level that produces the content on demand
+
+proc file system 
+	mounted on /proc at boot
+	contains lot of process information and lots more (essentially info about the state)
+
+
+subdirectory sys contains kernel tunable variables represented as files. when you cat some those files the function reports the current value for the variable
+when you write into the file the function replaces the current value of the variable
+
+processes are identified by their PID. There is a subsirectory for each process in proc directory
+
+
+sysfs 
+mounted at /sys
+
+is for kernel object info
+more information on hardware connectivity
+part of the sys filesystem directory structure reflects hardware connectivity
+
+
+Device files 
+are used for two kinds of devices
+	character devices
+	block devices
+
+a driver may have multiple deveice files available
+device files have a major number, minor number and type (c,b)
+major number - identifies which driver to use
+driver Implemented minor number in anyway that made sense to that kind of device
+device file namme is not important for the kernel
+
+device files ar ehow one interacts with DEVICE DRIVER
+A character device driver Implements function 
+
+a character device driver Implements functions that will be used by the user space. essentially it Implements system calls (open(), read(), write(), ioctl()). 
+One does that with the device file and the file descriptor for the file descriptor.
+
+when we open a device file we are gievn the file descriptor. then we can write read ioctl using that file descriptor. when we do that kernel can figure out which function in the kernel to actually call, those versions of the functions implemented by the device driver. When we do the opening the kernel looks at the major and minor number and it knows which driver's version of the functions to use later on 
+(The kernel arranges to have the driver's function to be called).
+
+
+echo hi > /dev/null would open and then write. The kernel will arrange to have write function and the open function for the driver associated with /dev/null be called
+
+echo $$ PID of the shell
+Go to /proc/$$ and list exe
+it is a soft line to binary of the process
+cmdline - how the program is run
+cwd - process directory inside proc (current directory of the process)
+
+
+/dev
+
+ls -l /dev/null
+crw-rw-rw-. 1 root root 1, 3 Apr 4 12:07 /dev/null
+c means character device
+1, 3 means major and minor number
+if we do something with /dev/null or redirect something to it character driver number 1 is invoked, and that driver can loot at the minor number and behave like we expect dev/null to behave 
+
+ls -l /dev/zero
+crw-rw-rw-. 1 root root 1, 5 Apr 4 12:07 /dev/zero
+
+
+cat /proc/meminfo
+memory info
+
+
+tty - prints the file name of the terminal connected to standard input
+
+
+strace -c date
+strace will display the system calls that a process makes as it runs
+
+
+sleep 100 &
+cd /proc/id
+cd fd
+ls -l
+shows what files process has opened
+
+
+sysctl -a | grep ip_forward
+list kernel configurable parameters
+
+
+fdisk -l |& grep /sys/block
+|& will direct standard input and errot to the greps
+
+
+list all character device files
+ls -l /dev | grep ^c | grep " 1,"
+
+
+
+
+GRUB
+grub is executeed after POST and BIOS
+BIOS loads beginning part of the GRUB
+GRUB is installed in a special place on disk
+GRUB loads the kernel, initial root file system, sets up the kernel command line, and then transfers control to the kernel
+GRUB can be interrupted. and then you can interact with it.
+GRUB goes to the disk, which means the file system and reads the kernel and the init file system images. GRUB needds to understand the filesystem type. So when GRUB is built, It's built with the support for different kind of file systems. In fact GRUB may understand the filesystem even though kernel doesn't, without a loadable kernel module
+GRUB can do file name completion
+
+man -k grub
+
+
+GRUB configuration 
+
+GRUB 1
+	GRUB 1 had a single config file grub.conf, that one edited to add, remove or modify kernel boot choices 
+
+GRUB 2
+	has more files more sophisticated 
+	/etc/grub.d
+	/etc/default/grub file is the stuff at the start of the file for configuration for grub (how long in second to wait until kernel is boot etc..)
+	add new GRUb entry
+		what typically do is edit or create new file underneath /etc/grub.d, 
+		Normally edit 40_custom to add new entry
+		number infront of the file name affects the order that the file are processed 
+		And then you are going to run grub2-mkconfig to process all that stuff and make a new config file for GRUB
+
+
+	GRUB is interactive
+	normally pauses before launching linux 
+	can interrupt GRUB by hitting a key (eg: arrow key)
+	then you can temporarily edit GRUB configuration 
+
+	after editing with grub 1 you would hit the B key to boot
+	with GRUB 2 you do a Ctr + x
+
+
+	GRUB command line parameters 
+		GRUB passes the parameters to the kernel
+		you can look at dmesg or /proc/cmdline to to see command line argumnets
+		in kernel source tree, it is Documentation/kernel-parameters.txt
+
+
+Booting
+Process 1 and startup services
+
+the file system that contains "/" is called root file system
+
+Initial RAM disk or RAM filesystem (initrd) is used to provide drivers and support for mounting system's real root file system
+Inside that image is the process that kernel runs first. Usually program called init
+It runs init and resposible for loading some kernel modules that are required for the kernel to be able to use the filesystem
+
+
+So when the init in the initail RAM based file system teminates (That's after real file system has been mounted) Linux kernel going to start init again. this time init coming from real filesystem (which is commonly on disk). This init will persist as long as the system is up
+
+recent linu systems init program is systemd
+This system is responsible for starting up system services like a web server
+
+
+In older linux systems, system services were controlled by runlevel scripts, you can boot up to a ceertain runlevel and that determines which services to start. that stuff were underneath /etc/rc.d
+
+systemd service files are under the /etc/systemd/system
+These services are all user space services and not features of the kernel
+
+
+initramfs images
+it is a file in /boot directory
+there is gonna be one for each kernel (an /initrd/initramfs in /boot for each kernel)
+these images are gzipped cpio achive
+kernel is going to unzip it and extract in into RAM and then mount it 
+For previous kernels when this was initrd, then a kernel would uncompress it and mount it from RAM based on it's type of filesystem
+
+Distributions and releases vary widely in the contents of their initrd/initramfs images 
+typically there is gonna be a program their with a name like init, from their it can vary widely. some distros init is a script in some it's a regular binary
+
+If you boo the kernel with rdinit=/bin/sh option when it comes to start the init program instead it will run /bin/sh , and the kernel run set as root and runs it on system console. If you are on the console you get a shell prompt
+
+instead of rdinit if you say init=/bin/bash, that's the init that comes from the hard disk. So initramfs stuff will all be done and then it will run init from the hard disk
+
+
+let's look at initramfs images
+
+mkdir /tmp/mydir
+cd /boot
+ls
+sudo cp initramfs-3.10.0-229.e17.x86_64.img /tmp/mydir/i.gz
+cd /tmp/mydir
+ls
+sudo file i.gz
+gunzip i.gz 
+file i
+#be very carefull about this step
+cpio -i --no-absolute-filenames <i
+ls 
+Now what we list here is was in the cpio archive. This is going to be expanded in the RAM and mounted as the first file system. And there is a program called init 
+ls -l init 
+# lrwxrwxrwx. 1 root root date time init -> /usr/lib/systemd/systemd
+
+Linux Kernel module
+object file with .ko suffix
+contain code to run in kernel space
+Dynamically adds functions into running kernel
+should be written in c and compiled for particular kernel version - not binary compatible with other versions
+
+	Advantages
+	can be relatively minimal kernel file 
+	adds functionalities without rebooting or rebuilding
+	allows only for the needed funtionality to be loaded
+
+Mofules are installed in a standard place
+	/lib/modules with each installed kernel version having its own directory 
+	modules are organized in different subdirectories under the kernel version
+	there are also configs files
+
+	each module should have a unique name 
+	module files can be in any directory, but modprobe utility is designed to look only under /lib/modules/`uname -r`
+	only modules built for the kernel version -and know how it was configured -should be loaded
+
+	modules run in kernel mode has all kernel privileges
+
+
+lsmod is the command that we use to list the modules that are loaded in the kernel
+rmmod is to remove a module. Module may be in use so may not be able to remove it. rmmod -f may let you remove a module that the kernel think in use.
+(Often never done since it can leave the kernel in a fragile mode)
+
+
+modinfo shows info on the module
+depmod - generates module config files for modprobe. No need to run this on our own. This is usually run when new module is installed.
+
+insmod - insert a module--but does not look into dependencies like modprobe
+	doesn't return untill module initialization functions returns 
+
+modprobe - preffered way of loading a module - modprobe will look at module dependencies and load everything 

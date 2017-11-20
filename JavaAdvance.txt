@@ -1,0 +1,120 @@
+
+Q: what exactly does this do Class.forName(“com.mysql.jdbc.Driver”).newInstance();
+
+Quoting from the JDBC Specification, Chapter 9, Section 2:
+
+JDBC drivers must implement the Driver interface, and the implementation must contain a static initializer that will be called when the driver is loaded. This initializer registers a new instance of itself with the DriverManager.
+And an example code is provided for AcmeJdbcDriver as follows:
+
+public class AcmeJdbcDriver implements java.sql.Driver {
+    static {
+        java.sql.DriverManager.registerDriver(newAcmeJdbcDriver());
+    }
+}
+And when you call Class.forName(String className), according to the API Documentation, the following happens:
+
+A call to forName("X") causes the class named X to be initialized.
+where initialization involves code in static block to be executed.
+
+So basically, you initialize the Driver class, and in turn the class registers itself with the java.sql.DriverManager per the JDBC specification.
+
+Please note, this is not needed anymore. Details can be found here.
+
+The DriverManager methods getConnection and getDrivers have been enhanced to support the Java Standard Edition Service Provider mechanism. JDBC 4.0 Drivers must include the file META-INF/services/java.sql.Driver. This file contains the name of the JDBC drivers implementation of java.sql.Driver. For example, to load the my.sql.Driver class, the META-INF/services/java.sql.Driver file would contain the entry:
+
+my.sql.Driver
+Applications no longer need to explictly load JDBC drivers using Class.forName().
+
+Url: https://stackoverflow.com/questions/15039265/what-exactly-does-this-do-class-fornamecom-mysql-jdbc-driver-newinstance
+
+
+
+Caller-Sensitive Methods
+@sun.reflect.CallerSensitive
+
+A caller-sensitive method varies its behavior according to the class of its immediate caller. It discovers its caller’s class by invoking the sun.reflect.Reflection.getCallerClass method.
+
+If you look at the implementation of Class#forName(String)
+
+@CallerSensitive
+public static Class<?> forName(String className)
+            throws ClassNotFoundException {
+    return forName0(className, true,
+                    ClassLoader.getClassLoader(Reflection.getCallerClass()));
+}
+
+, you notice that it is using Reflection.getCallerClass(). If we look at that method
+
+Returns the class of the caller of the method calling this method, ignoring frames associated with java.lang.reflect.Method.invoke() and its implementation.
+@CallerSensitive
+public static native Class getCallerClass();
+
+The problem, it seems, before this JEP, was that if the caller sensitive method was called through reflection instead of directly, there had to be a complex process to identify what the actual calling class was. This was problematic if the method was invoked through reflection. A simpler process was proposed (and introduced) with @CallerSensitive.
+
+Basically, the @CallerSensitive annotation is used by the JVM
+
+The JVM will track this annotation and, optionally, enforce the invariant that the sun.reflect.Reflection.getCallerClass method can only report the caller of a method when that method is marked with this annotation
+
+URL: https://stackoverflow.com/questions/22626808/what-does-the-sun-reflect-callersensitive-annotation-mean
+URL: http://openjdk.java.net/jeps/176
+
+
+
+Java ClassLoader
+
+A class loader creates a flat name space of class bodies that are referenced by a string name. The method definition is:
+
+Class r = loadClass(String className, boolean resolveIt);  
+
+All Java virtual machines include one class loader that is embedded in the virtual machine. This embedded loader is called the primordial class loader. It is somewhat special because the virtual machine assumes that it has access to a repository of trusted classes which can be run by the VM without verification.
+
+The primordial class loader implements the default implementation of loadClass(). Thus, this code understands that the class name java.lang.Object is stored in a file with the prefix java/lang/Object.class somewhere in the class path.
+
+So when are classes loaded? There are exactly two cases: 
+1.  when the new bytecode is executed (for example, FooClass f = new FooClass();)
+2.  When the bytecodes make a static reference to a class (for example, System.out)
+
+
+A non-primordial class loader
+The Java virtual machine has hooks in it to allow a user-defined class loader to be used in place of the primordial one.
+A user class loader gets the chance to load a class before the primordial class loader does. Because of this, it can load the class implementation data from some alternate source, which is how the AppletClassLoader can load classes using the HTTP protocol.
+
+Ex: https://www.javaworld.com/article/2077260/learn-java/learn-java-the-basics-of-java-class-loaders.html
+
+
+
+Lambda expressions
+
+In other words, lambda expressions are nameless functions given as constant values, and written exactly in the place where it’s needed, typically as a parameter to some other function.
+
+The basic syntax of a lambda expression is
+
+either
+(parameters) -> expression
+or
+(parameters) -> { statements; }
+or
+() -> expression
+
+(int a, int b) ->    a * b                          // takes two integers and returns their multiplication
+(a, b)         ->   a - b                           // takes two numbers and returns their difference
+() -> 99                                            // takes no values and returns 99
+(String a) -> System.out.println(a)                 // takes a string, prints its value to the console, and returns nothing
+a -> 2 * a                                          // takes a number and returns the result of doubling it
+c -> { //some complex statements }                  //takes a collection and do some procesing
+
+
+What is a functional interface?
+Single Abstract Method interfaces (SAM Interfaces) is not a new concept. It means interfaces with only one single method. In java, we already have many examples of such SAM interfaces. From java 8, they will also be referred as functional interfaces as well. Java 8, enforces the rule of single responsibility by marking these interfaces with a new annotation i.e. @FunctionalInterface.
+
+Ex:
+@FunctionalInterface
+public interface Runnable {
+    public abstract void run();
+}
+
+In simple words, a lambda expression is an instance of a functional interface. But a lambda expression itself does not contain the information about which functional interface it is implementing; that information is deduced from the context in which it is used.
+
+Java Predicate
+
+A predicate is a statement that may be true or false depending on the values of its variables. It can be thought of as an operator or function that returns a value that is either true or false.

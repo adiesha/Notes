@@ -10,3 +10,5 @@ maven core plugins
 
 
 mvn help:effective-pom
+
+	mvn archetype:generate -DgroupId=com.adiesha -DartifactId=scala-simple -DarchetypeArtifactId=net.alchim31.maven:scala-archetype-simple version -DinteractiveMode=false

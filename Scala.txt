@@ -26,3 +26,9 @@ toInt(someString) match {
     case Some(i) => println(i)
     case None => println("That didn't work.")
 }
+
+
+Scala map function 
+The map method takes a predicate function and applies it to every element in the collection. It creates a new collection with the result of the predicate function applied to each and every element of the collection.
+
+def map[B](f: (A) ⇒ B): Traversable[B]
