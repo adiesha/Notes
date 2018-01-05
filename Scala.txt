@@ -32,3 +32,37 @@ Scala map function
 The map method takes a predicate function and applies it to every element in the collection. It creates a new collection with the result of the predicate function applied to each and every element of the collection.
 
 def map[B](f: (A) ⇒ B): Traversable[B]
+
+
+Repeated parameters
+
+Scala allows you to indicate that the last parameter to a function may be repeated. This allows clients to pass variable length argument lists to the function. To denote a repeated parameter, place an asterisk after the type of the parameter. For example:
+
+def echo(args: String*) = for (arg <- args) println(arg)
+
+  scala> echo()
+  
+  scala> echo("one")
+  one
+  
+  scala> echo("hello", "world!")
+  hello
+  world!
+
+  Inside the function, the type of the repeated parameter is an Array of the declared type of the parameter. Thus, the type of args inside the echo function, which is declared as type "String*" is actually Array[String]. Nevertheless, if you have an array of the appropriate type, and attempt to pass it as a repeated parameter, you'll get a compiler error:
+
+  scala> val arr = Array("What's", "up", "doc?")
+  arr: Array[java.lang.String] = Array(What's, up, doc?)
+  
+  scala> echo(arr)
+  <console>:7: error: type mismatch;
+   found   : Array[java.lang.String]
+   required: String
+         echo(arr)
+              ^
+To accomplish this, you'll need to append the array argument with a colon and an _* symbol, like this:
+  scala> echo(arr: _*)
+  What's
+  up
+  doc?
+This notation tells the compiler to pass each element of arr as its own argument to echo, rather than all of it as a single argument.

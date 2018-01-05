@@ -1,0 +1,195 @@
+Static vs Dynamic Libraries
+
+--link http://www.bogotobogo.com/cplusplus/libraries.php
+
+Static Libraries
+A static library contains object code linked with an end-user application, and then becomes part of that executable.A static library is sometimes called an archive since it is just a package of compiled object files. These libraries are in directories such as /lib, /usr/lib or /usr/local/lib.
+
+After resolving the various function references from the main program to the modules in the static library, a linker extracts copies of the required object modules from the library and copies these into the resulting executable file.	
+
+When linking is done during the creation of an executable, it is known as static linking or early binding.
+
+In this case, the linking is usually done by a linker, but may also be done by the compiler. A static library, also known as an archive, is intended to be statically linked. 
+
+The filenames always start with lib, and end with .a (archive, static library) on Unix/Linux,
+
+On Windows it's a little bit complicated. Depending on how they are compiled, *.LIB files can be either static libraries or representations of dynamically linkable libraries needed only during compilation, known as Import Libraries.
+
+
+Dynamic Libraries
+
+A shared library or shared object is a file that is intended to be shared by executable files and further shared objects files. Modules used by a program are loaded from individual shared objects into memory at load time or run time, rather than being copied by a linker when it creates a single monolithic executable file for the program.
+
+In other words, dynamic libraries are files linked against at compile time to resolve undefined references and then distributed with the end-user application so that the application can load the library code at run time. Usually, this requires use of a dynamic linker on the end user's machine to determine and load all dynamic library dependencies at run time, perform the necessary symbol relocations, and then pass control to the application.
+
+The Linux dynamic linker is called ld.so and on the Mac it is called dyld. The dynamic linker supports a number of environment variables to modify or debug its behavior.
+
+As mentioned earlier, dynamic libraries are sometimes called shared libraries because they can be shared by multiple programs. On Unix-like machine, they have a .so (shared object, dynamically linked library) file extension. On Windows, dynamically linkable libraries usually have the suffix *.DLL, although other file name extensions may be used for specific purpose dynamically-linked libraries, e.g. *.OCX for OLE libraries.
+
+// mylib.h
+#ifndef MYLIB_H
+#define MYLIB_H
+double calcSqrt(double);
+#endif
+
+// calc.c
+#include <math.h>
+#include "mylib.h"
+double calcSqrt(double d)
+{
+        return sqrt(d);
+}
+
+// main.c
+#include <stdio.h>
+#include "mylib.h"
+int main()
+{
+        double d = 100;
+        printf("sqrt(%3.0f)=%2.0f\n",d,calcSqrt(d));
+        return 0;
+}
+
+
+Building Library - static
+
+$ gcc -c main.c
+$ gcc -c calc.c
+$ gcc -o main calc.o main.o -lm   or   gcc -o main calc.o main.o /usr/lib/libm.a
+$ ./main
+sqrt(100)=10
+
+Now, lets build a new library using ar.
+
+$ ar crv libcalc.a calc.o
+
+Now we can make executable from the library we just built, libcalc.a
+
+$ gcc -o main main.o libcalc.a -lm   
+or
+$ gcc -o main main.o -L. -lcalc -lm
+
+$ ./main
+sqrt(100)=10
+
+The -L. option tells compiler that the library, libcalc.a can be found in the current directory.
+
+
+//We can list symbols in the object/library by using nm command:
+
+$	nm main
+$ nm libcalc.a
+calc.o:
+00000000 T calcSqrt
+         U sqrt
+
+The character in the second column represents the symbol type: T refers to a text section symbol that is defined in the library, U refers to a symbol that is referenced by the library but is not defined by it. An uppercase letter specifies an external symbol, while a lowercase represents an internal symbol.
+
+
+Building Library - shared (dynamic)
+
+When a program uses shared library, the code itself is not included in the program, but it just links the library to refer it at run time. In that way, several program use the library without having it, and can save space. In other words, shared libraries address the disadvantages of static libraries. A shared library is an object module that can be loaded at run time at an arbitrary memory address, and it can be linked to by a program in memory. Shared libraries often are called as shared objects. On most UNIX systems they are denoted with a .so suffix and Microsoft refer to them as DLLs (dynamic link libraries).
+
+When linux application starts, the OS checks the library version requested by the application.
+
+In linux system, ld.so (dynamic linker/loader) loads the shared libraries needed by a program, prepares the program to run, and then runs it.
+
+When we try to run a program, but it is complaining that a library is missing though we know the library is there (such as in /usr/local/lib). But most likely /usr/local/lib is not on the default place (/usr/lib) where the program looks for the lib. So, we need to let the system know where to look for. There is a file (/etc/ld.so.conf) on our system where all the paths to the libraries are mentioned. To do that, we should run ldconfig.
+
+We can check the required shared libraries for a program to run by using ldd:
+
+$ ldd main
+        linux-gate.so.1 =>  (0x00dbb000)
+        libm.so.6 => /lib/libm.so.6 (0x493c9000)
+        libc.so.6 => /lib/libc.so.6 (0x4a439000)
+        /lib/ld-linux.so.2 (0x4a417000)
+
+
+To make shared library with calc.o, we do the following:
+
+$ gcc -shared -fPIC -o libcalc.so calc.o
+
+The command tells the compiler driver to generate a shared library, libcalc.so, from the object module calc.o. The -fPIC option tells the compiler to generate position independent code (PIC).
+
+(But it looks like you have to compile calc.c with -fPIC first otherwise making shared library would fail)
+
+Now, suppose the primary object module is main.o, which has dependencies on calc.o . In this case, the linker is invoked with:
+
+$ gcc main.o ./libcalc.so -lm
+
+The command above makes an executable file, a.out, in a form that can be linked to libcalc.so at load time. However, a.out does not contain the object module calc.o, which would have been included had we created a static library instead of a shared library. The executable simply contains some relocation and symbol table information that allow references to code and data in libcalc.so to be resolved at run time. Thus, a.out here is a partially executable file that still has its dependency in libcalc.so.
+
+
+The executable also contains a .interp section that has the name of the dynamic linker, which itself is a shared object on Linux systems, ld-linux.so. So, when the executable is loaded into memory, the loader passes control to the dynamic linker. The dynamic linker contains some start-up code that maps the shared libraries to the program's address space. '
+
+It then does the following:
+
+1.	Relocates the text and data of libcalc.so into memory segment
+2.	Relocates any references in a.out to symbols defined by libcalc.so
+
+Then, the dynamic linker passes control to the application, and now the location of shared object is fixed in the memory.
+
+Shared libraries can be loaded from applications even in the middle of their executions. An application can request a dynamic linker to load and link shared libraries, even without linking those shared libraries to the executable. Linux provides system calls, such as dlopen to load a shared object, dlsym to look up a symbol in that shared object , and dlclose to close the shared object.
+
+We have already used some of the tools to explore object/executable files, here is the list of tools:
+
+COMMAND - ar
+creates static libraries.
+COMMAND - ldd
+lists the shared libraries on which the object binary is dependent.
+COMMAND - nm
+lists the symbols defined in the symbol table of an object file or a static library.
+COMMAND - objdump
+to display all the information in an object binary file.
+COMMAND - strings
+list all the printable strings in a binary file.
+COMMAND - strip
+deletes the symbol table information.
+COMMAND - c++filt
+demangle low-level names into user-level names (unix/linux command).
+
+Linker vs Loader
+
+Unlike some authors who prefer using combined word "link-loading", in the page, I have been using those separated from each other.
+
+Linker 
+After compilation, the fragments (compilation unit) of a program are glued together by a linker.
+Combines two or more objects (relocatable object) and supplies the information needed to allow references between them.
+Relocation (loader does this as well) and the resolution of external references are performed by the linker.
+
+Loader 
+Loading an executable object into memory for execution.
+
+Note:
+Relocatable object
+A relocatable object code is acceptable as input to a linker.
+A relocatable object file has following table information: import table, relocation table, and export table.
+
+Executable object
+Executable object code is acceptable as an input to a loader, and it can be brought into memory and run.
+Executable object file is distinguished by the fact that it contains no references to external symbols, and it also defines a starting address for execution.
+
+Every shared library has a special name called the soname. The soname has the prefix lib, the name of the library, the phrase .so, followed by a period and a version number that is incremented whenever the interface changes. On a working system a fully-qualified soname is simply a symbolic link to the shared library's real name.
+
+Every shared library also has a real name, which is the filename containing the actual library code. The real name adds to the soname a period, a minor number, another period, and the release number. The last period and release number are optional. The minor number and release number support configuration control by letting you know exactly what version(s) of the library are installed.
+
+The last command (g++ -shared ..), on successful, produces a shared library named libhey.so.1.0.1.
+
+In that command, -W1 passes options to linker. In this example, the options to be passed on to the linker:
+
+-soname libhey.so.1
+the name passed with the -o option is passed to g++.
+After those commands, we have the following in the list:
+
+[]$ ls
+hey.cpp hey.h hey.o libhey.so.1.0.1 main.cpp
+Now we have successfully created a shared library named libhey.so.1.0.1. Let us see how to include this shared library in our application.
+
+symbolic link:
+
+ln -sf libhey.so.1.0.1 libhey.so
+ln -sf libhey.so.1.0.1 libhey.so.1
+
+1. The link to ./libhey.so allows the naming convention for the compile flag -lhey to work.
+2. The link to ./libhey.so.1 allows the run time binding to work.
+

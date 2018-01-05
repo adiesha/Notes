@@ -1,0 +1,118 @@
+make
+A simple makefile consists of rules with the following syntax:
+
+target ... : prerequisites (dependencies) ...
+             recipe (system command)
+             ...
+
+By default, when make looks for the makefile, it tries the following names, in order: GNUmakefile, makefile and Makefile.
+
+Let's start Makefile with 4 files:
+
+
+myprogram : main.o aa.o bb.o cc.o
+	g++ -o myprogram main.o aa.o bb.o cc.o
+
+main.o : main.cpp header1.h
+	g++ -c main.cpp	
+aa.o : aa.cpp header1.h header2.h
+	g++ -c aa.cpp
+bb.o : bb.cpp header2.h
+	g++ -c bb.cpp
+cc.o : cc.cpp header3.h
+	g++ -c cc.cpp
+clean :
+	rm myprogram \
+	main.o aa.o bb.o cc.
+
+The make starts with the first target (not targets whose names start with "."). In the example above, the default goal is to update the executable program myprogram; therefore, we put that rule first. When we issue the command:
+
+make
+
+make reads the makefile in the current directory and starts by processing the first rule. In our case, this rule is for relinking myprogram. However, before make can fully process this rule, it must process the rules for the files that myprogram depends on, which in this case are the object files. Each of these files is processed according to its own rule. These rules are updating each .o file by compiling its source file. The recompilation should be done if the source file, or any of the header files named as prerequisites, is more recent than the object file, or if the object file does not exist.
+The other rules are processed because their targets appear as prerequisites of the goal. If some other rule is not depended on by the goal, that rule is not processed, unless we tell make to do so with a command such as make clean.
+
+
+After recompiling whichever object files needed, make decides whether to relink myprogram. This must be done if the file does not exist, or if any of the object files are newer than it. If an object file was just recompiled, it is now newer than myprogram, so myprogram is relinked. Thus, if we change the file aa.cpp and run make, make will compile that file to update aa.o, and then link myprogram. If we change the file header2.h and run make, make will recompile the object files aa.o and bb.o and then link the file myprogram.
+
+In short, to update myprogram, we just issue make, to clean *.o and myprogram, we issue make clean.
+
+But there are repeated files, and this makes the make error prone when other files are added later. So, we need to use variables:
+
+#Makefile case 1
+OBJECTS = main.o aa.o bb.o cc.o
+myprogram : $(OBJECTS)
+	g++ -o myprogram $(OBJECTS)
+
+main.o : main.cpp header1.h
+	g++ -c main.cpp	
+aa.o : aa.cpp header1.h header2.h
+	g++ -c aa.cpp
+bb.o : bb.cpp header2.h
+	g++ -c bb.cpp
+cc.o : cc.cpp header3.h
+	g++ -c cc.cpp
+clean :
+	rm myprogram \
+	$(OBJECTS)
+
+
+Acutally, make has an implicit rule (when and how to remake files based on their names) for updating a *.o file from a correspondingly named *.cpp file, we do not have to put recipes for the compiler. For example, to make main.o we do not have to specify g++ -c main.cpp:
+
+#Makefile case 2
+OBJECTS = main.o aa.o bb.o cc.o
+myprogram : $(OBJECTS)
+	g++ -o myprogram $(OBJECTS)
+main.o : header1.h
+aa.o :  header1.h header2.h
+bb.o : header2.h
+cc.o : header3.h
+clean : rm myprogram \
+	$(OBJECTS)
+
+To prevent make from getting confused by an actual file called clean, me may use .PHONY:
+
+#Makefile case 3
+OBJECTS = main.o aa.o bb.o cc.o
+myprogram : $(OBJECTS)
+	g++ -o myprogram $(OBJECTS)
+main.o : header1.h
+aa.o :  header1.h header2.h
+bb.o : header2.h
+cc.o : header3.h
+.PHONY : clean
+clean : -rm myprogram $(OBJECTS)
+
+
+The "-" in -rm causes make to continue in spite of errors from rm.
+
+
+The following Makefile is using more variables including automatic variables.
+#Makefile case 4
+CC = g++
+CFLAGS = -c
+SOURCES =  main.cpp aa.cpp bb.cpp cc.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
+EXECUTABLE = myprogram
+
+all: $(OBJECTS) $(EXECUTABLE)
+
+$(EXECUTABLE) : $(OBJECTS)
+		$(CC) $(OBJECTS) -o $@  
+
+.cpp.o: *.h
+	$(CC) $(CFLAGS) $< -o $@
+
+clean :
+	-rm -f $(OBJECTS) $(EXECUTABLE)
+
+.PHONY: all clean
+
+If we do make or make all, we get:
+
+main.cpp -o main.o
+g++ -c aa.cpp -o aa.o
+g++ -c bb.cpp -o bb.o
+g++ -c cc.cpp -o cc.o
+g++ main.o aa.o bb.o cc.o -o myprogram
+
