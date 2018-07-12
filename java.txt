@@ -1,0 +1,218 @@
+https://docs.oracle.com/javase/tutorial/java/generics/erasure.html
+Type erasure
+
+Arrays Are Covariant
+Arrays are said to be covariant which basically means that, given the subtyping rules of Java, an array of type T[] may contain elements of type T or any subtype of T. For instance:
+
+Number[] numbers = newNumber[3];
+numbers[0] = newInteger(10);
+numbers[1] = newDouble(3.14);
+numbers[2] = newByte(0);
+
+
+But not only that, the subtyping rules of Java also state that an array S[] is a subtype of the array T[] if S is a subtype of T, therefore, something like this is also valid:
+
+Integer[] myInts = {1,2,3,4};
+Number[] myNumber = myInts;
+
+
+Because according to the subtyping rules in Java, an array Integer[] is a subtype of an array Number[] because Integer is a subtype of Number.
+
+But this subtyping rule can lead to an interesting question: what would happen if we try to do this?
+
+myNumber[0] = 3.14; //attempt of heap pollution
+
+This last line would compile just fine, but if we run this code, we would get an ArrayStoreException because we’re trying to put a double into an integer array. The fact that we are accessing the array through a Number reference is irrelevant here, what matters is that the array is an array of integers.
+
+The Problem with Java Generics
+Now, the problem with generic types in Java is that the type information for type parameters is discarded by the compiler after the compilation of code is done; therefore this type information is not available at run time. This process is called type erasure. There are good reasons for implementing generics like this in Java, but that’s a long story, and it has to do with binary compatibility with pre-existing code.
+
+The important point here is that since at run-time there is no type information, there is no way to ensure that we are not committing heap pollution.
+
+Let’s consider now the following unsafe code:
+
+List<Integer> myInts = newArrayList<Integer>();
+myInts.add(1);
+myInts.add(2);
+List<Number> myNums = myInts; //compiler error
+myNums.add(3.14); //heap polution
+If the Java compiler does not stop us from doing this, the run-time type system cannot stop us either, because there is no way, at run time, to determine that this list was supposed to be a list of integers only. The Java run-time would let us put whatever we want into this list, when it should only contain integers, because when it was created, it was declared as a list of integers. That’s why the compiler rejects line number 4 because it is unsafe and if allowed could break the assumptions of the type system.
+
+
+As such, the designers of Java made sure that we cannot fool the compiler. If we cannot fool the compiler (as we can do with arrays) then we cannot fool the run-time type system either.
+
+As such, we say that generic types are non-reifiable, since at run time we cannot determine the true nature of the generic type.
+
+Evidently this property of generic types in Java would have a negative impact on polymorphism. Let’s consider now the following example:
+
+staticlongsum(Number[] numbers) {
+longsummation = 0;
+for(Number number : numbers) {
+summation += number.longValue();
+}
+returnsummation;
+}
+Now we could use this code as follows:
+
+Integer[] myInts = {1,2,3,4,5};
+Long[] myLongs = {1L, 2L, 3L, 4L, 5L};
+Double[] myDoubles = {1.0, 2.0, 3.0, 4.0, 5.0};
+System.out.println(sum(myInts));
+System.out.println(sum(myLongs));
+System.out.println(sum(myDoubles));
+
+But if we attempt to implement the same code with generic collections, we would not succeed:
+
+staticlongsum(List<Number> numbers) {
+longsummation = 0;
+for(Number number : numbers) {
+summation += number.longValue();
+}
+returnsummation;
+}
+Because we we would get compiler errors if you try to do the following:
+
+List<Integer> myInts = asList(1,2,3,4,5);
+List<Long> myLongs = asList(1L, 2L, 3L, 4L, 5L);
+List<Double> myDoubles = asList(1.0, 2.0, 3.0, 4.0, 5.0);
+System.out.println(sum(myInts)); //compiler error
+System.out.println(sum(myLongs)); //compiler error
+System.out.println(sum(myDoubles)); //compiler error
+The problem is that now we cannot consider a list of integers to be subtype of a list of numbers, as we saw above, that would be considered unsafe for the type system and compiler rejects it immediately.
+
+Evidently, this is affecting the power of polymorphism and it needs to be fixed. The solution consists in learning how to use two powerful features of Java generics known as covariance and contravariance.
+
+Covariance
+For this case, instead of using a type T as the type argument of a given generic type, we use a wildcard declared as ? extends T, where T is a known base type.
+
+With covariance we can read items from a structure, but we cannot write anything into it. All these are valid covariant declarations.
+
+List<? extendsNumber> myNums = newArrayList<Integer>();
+List<? extendsNumber> myNums = newArrayList<Float>();
+List<? extendsNumber> myNums = newArrayList<Double>();
+And we can read from our generic structure myNums by doing:
+
+Number n = myNums.get(0);
+Because we can be sure that whatever the actual list contains, it can be upcasted to a Number (after all anything that extends Number is a Number, right?)
+
+However, we are not allowed to put anything into a covariant structure.
+
+myNumst.add(45L); //compiler error
+This would not be allowed because the compiler cannot determine what is the actual type of the object in the generic structure. It can be anything that extends Number (like Integer, Double, Long), but the compiler cannot be sure what, and therefore any attempt to retrieve a generic value is considered an unsafe operation and it is immediately rejected  by the compiler. So we can read, but not write.
+
+Contravariance
+For contravariance we use a different wildcard called ? super T, where T is our base type. With contravariance we can do the opposite. We can put things into a generic structure, but we cannot read anything out of it.
+
+In this case, the actual nature of the object is  List of Object, and through contravariance, we can put a Number in it, basically because a Number has Object as its common ancestor. As such, all numbers are also objects, and therefore this is valid.
+
+However, we cannot safely read anything from this contravariant structure assuming that we will get a number.
+
+Number myNum = myNums.get(0); //compiler-error
+As we can see, if the compiler allowed us to write this line, we would get a ClassCastException at run time. So, once again, the compiler does not run the risk of allowing this unsafe operation and rejects it immediately.
+
+Get/Put Principle
+In summary, we use covariance when we only intend to take generic values out of a structure. We use contravariance when we only intend to put generic values into a structure and we use an invariant when we intend to do both.
+
+The best example I have is the following that copies any kind of numbers from one list into another list. It only gets items from the source, and it only puts items in the destiny.
+
+publicstaticvoidcopy(List<? extends Number> source,
+List<? super Number> destiny) {
+for(Number number : source) {
+destiny.add(number);
+}
+}
+Thanks to the powers of covariance and contravariance this works for a case like this:
+
+List<Integer> myInts = asList(1,2,3,4);
+List<Integer> myDoubles = asList(3.14, 6.28);
+List<Object> myObjs = new ArrayList<Object>();
+copy(myInts, myObjs);
+copy(myDoubles, myObjs);
+
+
+
+    @Test
+    public void test() {
+        Number[] numbers = new Number[3];
+        numbers[0] = new Integer(10)    ;
+        numbers[1] = new Double(3.14);
+        numbers[2] = new Byte((byte) 0);
+        Integer[] myInts = {1,2,3,4};
+        Number[] myNumber = myInts;
+//        myNumber[0] = 3.14; //attempt of heap pollution
+
+        List<Integer> myInts1 = new ArrayList<Integer>();
+        myInts1.add(1);
+        myInts1.add(2);
+//        List<Number> myNums = myInts1; //compiler error
+//        myNums.add(3.14); //heap polution
+
+        List<? extends Number> myNums2 = new ArrayList<Integer>();
+        List<? extends Number> myNums3 = new ArrayList<Float>();
+        List<? extends Number> myNums4 = new ArrayList<Double>();
+
+        // myNums3.add(45L); //can not do this
+//        Number number = myNums2.get(0);
+
+        //Covariance we can retrieve but we cannot add
+
+        List<? super Number> myNum = new ArrayList<>();
+        myNum.add(0, 12);
+        myNum.add(1, 12.0);
+        myNum.add(2, 12L);
+        myNum.add(3, 13D);
+
+        // Number number1 = myNum.get(0); cannot do this
+        Number number1 = (Number) myNum.get(0);
+        System.out.println(number1);
+
+    }
+
+
+
+    Bridge Methods
+When compiling a class or interface that extends a parameterized class or implements a parameterized interface, the compiler may need to create a synthetic method, called a bridge method, as part of the type erasure process. You normally don't need to worry about bridge methods, but you might be puzzled if one appears in a stack trace.
+
+After type erasure, the Node and MyNode classes become:
+
+public class Node {
+
+    public Object data;
+
+    public Node(Object data) { this.data = data; }
+
+    public void setData(Object data) {
+        System.out.println("Node.setData");
+        this.data = data;
+    }
+}
+
+public class MyNode extends Node {
+
+    public MyNode(Integer data) { super(data); }
+
+    public void setData(Integer data) {
+        System.out.println("MyNode.setData");
+        super.setData(data);
+    }
+}
+After type erasure, the method signatures do not match. The Node method becomes setData(Object) and the MyNode method becomes setData(Integer). Therefore, the MyNode setData method does not override the Node setData method.
+
+To solve this problem and preserve the polymorphism of generic types after type erasure, a Java compiler generates a bridge method to ensure that subtyping works as expected. For the MyNode class, the compiler generates the following bridge method for setData:
+
+class MyNode extends Node {
+
+    // Bridge method generated by the compiler
+    //
+    public void setData(Object data) {
+        setData((Integer) data);
+    }
+
+    public void setData(Integer data) {
+        System.out.println("MyNode.setData");
+        super.setData(data);
+    }
+
+    // ...
+}
+As you can see, the bridge method, which has the same method signature as the Node class's setData method after type erasure, delegates to the original setData method.

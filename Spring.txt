@@ -1,0 +1,10 @@
+
+
+<dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+             <version>2.4.1</version>
+ </dependency>
+ 
+Spring will load Jackson2JsonMessageConverter into its application context automatically. Whenever you request resource as json with accept headers=”Accept=application/json”, then Jackson2JsonMessageConverter comes into picture and convert resource to json format.
+Now change pom.xml as follows:

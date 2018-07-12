@@ -1,0 +1,22 @@
+Lambda expressions can access 
+	static fields of the enclosing class
+	instance fields of the enclosing class
+
+How - They store a reference to the enclosing object
+
+Lambda expressions can access local variables of the enclosing method provided they are effectively final
+
+How - They store a copy of their value
+
+lambdas and anonymous classes may have simalarities but not equal
+
+	Lambdas only work for FIs
+	Anonymous classes can have states
+	Lamdas are more succints (less code to do same thing)
+	Lambdas do not create additional class files like ananomous classes
+	Not every occurance of lambda functions create new objects
+
+
+Method references
+
+

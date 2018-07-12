@@ -1,0 +1,24 @@
+WebSphere MQ control commands
+
+dspmq: Display a list of queue managers that exist on the machine and their status.
+
+crtmqm: Create a queue manager.
+	Ex: $ ./crtmqm QMGR1
+
+strmqm: Start a queue manager on UNIX.
+	Ex: $ ./strmqm QMGR1
+
+endmqm: End (stop) a queue manager.
+	Ex: $ ./endmqm QMGR1
+
+runmqsc Interactive console for MQSC commands
+	Ex: $ ./runmqsc QMGR1
+
+dspmqver Report information about the current maintenance level of the WebSphere MQ installation.
+	Ex: $ ./dspmqver
+
+Key terms
+Term						Description
+Queue managers				The queue manager is responsible for maintaining the queues it owns, and for storing all the messages it receives onto the appropriate queues.
+Messages					A message is a string of bytes that is meaningful to the applications that use it. Messages are used to transfer information from one application program to another. The applications can be running on the same or on different computers.
+Local queues				A local queue is a data structure used to store messages. The queue can be a normal queue or a transmission queue. A normal queue holds messages that are to be read by an application that is reading the message directly from the queue manager. A transmission queue holds messages that are in transit to another queue manager.
