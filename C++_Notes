@@ -27,3 +27,11 @@ constexpr int n()
 }
 
 double a[n()]; // n() is a compile time constant expression
+
+
+
+Using the delete operator on an array pointer is undefined behavior in C++. 
+This means that the behavior of the program is unpredictable and can vary between different compilers and platforms.
+In most cases, using delete on an array pointer will result in a memory leak. This is because the delete operator only deallocates the memory for the single object pointed to by the pointer, not the entire array.
+In some cases, using delete on an array pointer may cause the program to crash. This is because the delete operator may try to access memory that is not valid, which can lead to a segmentation fault.
+It is important to always use the delete[] operator to deallocate memory for an array of objects in C++. This will ensure that the entire array is properly deallocated and that no memory leaks occur.
