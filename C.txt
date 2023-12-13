@@ -1,0 +1,4 @@
+extern vs static (opposite keywords)
+
+all functions declarations are implicitly extern
+https://jameshfisher.com/2017/08/28/c-extern-function
