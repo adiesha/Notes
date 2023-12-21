@@ -7,3 +7,7 @@ https://jameshfisher.com/2017/08/28/c-extern-function
 https://stackoverflow.com/questions/17720223/c-typedef-struct-name-vs-typedef-struct-name
 
 the idea behind the correct usage of typedef and struct key words
+
+
+Finding the length of the string c
+https://stackoverflow.com/questions/4180818/finding-the-length-of-a-character-array-in-c
