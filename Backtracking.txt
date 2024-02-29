@@ -1,0 +1,20 @@
+Backtracking
+Make a choice, and go further, if the decision that you took is not good go back and take another choice
+
+
+There are two types of backtracking
+Usually recursive solutions are used to implement backtracking.
+
+1. we can keep track of the decisions that we make and if the decision that we make is not okay, we can remove that from the solution and take something else.
+
+2. Backtracking recursively: Eventhough we used recursion in the earlier type, we use the solution up to the $k$ th step for the $k+1$ step. However, in this method we use the solution from the $k+1$ step to extend the solution for the $k$th step. Basically, solution is only built up if there is a solution.
+
+
+There are pros and cons in these approaches. For example, think of the problem where you need to enumerate all the unique subsets of a given array. Then you need to make sure that when we have duplicates, we don't make the same choice on the same level twice. 
+For this problem, approach 1 is easier, The reason is when make a possible choice among set of available paths, we can check whether we have already taken a similar decision earlier (at the same loop https://www.geeksforgeeks.org/generate-all-distinct-subsequences-of-array-using-backtracking/). This makes easier to identify unique sets of subsets.
+
+We can do the same with the approach 2 but it is bit trickier. (Although one can argue that both are simillar difficulty)
+
+
+
+https://www.youtube.com/watch?v=gBC_Fd8EE8A
